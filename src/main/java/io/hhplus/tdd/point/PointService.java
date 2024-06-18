@@ -9,17 +9,23 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class PointService {
 
-    UserPointTable userPointTable;
+    private UserPointTable userPointTable;
 
     // 포인트 조회
-    public long selectPointById(long id) {
-        return 0;
+    public UserPoint selectPointById(long id) {
+        return userPointTable.selectById(id);
     }
 
     // 포인트 충전
     public UserPoint chargePoint(long id, long amount) {
-        UserPoint result = userPointTable.insertOrUpdate(id, amount);
-        return result;
+        UserPoint user = userPointTable.selectById(id);
+
+        if (user == null) {
+            user = userPointTable.insertOrUpdate(id, amount);
+        } else {
+            user = userPointTable.insertOrUpdate(id, user.point()+amount);
+        }
+        return user;
     }
 
     // 포인트 사용

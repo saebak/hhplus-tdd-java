@@ -1,6 +1,8 @@
 package io.hhplus.tdd.point;
 
+import io.hhplus.tdd.ErrorResponse;
 import io.hhplus.tdd.database.UserPointTable;
+import io.hhplus.tdd.exception.PointNotEnoughException;
 import org.assertj.core.api.Assertions.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,7 +12,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import static org.assertj.core.api.Assertions.assertThat;
+
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 @SpringBootTest
@@ -25,11 +28,10 @@ public class PointServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        pointService = new PointService(userPointTable);
     }
 
     @Test
-    public void 유저_조회_존재하지않음() throws Exception {
+    public void 유저_조회_존재() throws Exception {
 
         // given
         long id = 1;
@@ -37,14 +39,14 @@ public class PointServiceTest {
         given(userPointTable.selectById(anyLong())).willReturn(userPoint);
 
         // when
-        UserPoint result = userPointTable.selectById(id);
+        UserPoint result = pointService.selectPointById(id);
 
         // then
-        assertThat(result.id()).isEqualTo(id);
+        assertThat(result.id()).isEqualTo(1);
     }
 
     @Test
-    public void 유저_조회_존재() {
+    public void 유저_조회_존재하지않음() {
 
         // given
         long id = 1;
@@ -52,7 +54,7 @@ public class PointServiceTest {
         given(userPointTable.selectById(anyLong())).willReturn(null);
 
         // when
-        UserPoint result = userPointTable.selectById(id);
+        UserPoint result = pointService.selectPointById(id);
 
         // then
         assertThat(result).isNull();
@@ -72,8 +74,8 @@ public class PointServiceTest {
         UserPoint result = pointService.chargePoint(id, amount);            // 포인트 충전 서비스 호출
         
         // then()
-        assertThat(result.id()).isEqualTo(userPoint.id());
-        assertThat(result.point()).isEqualTo(userPoint.point());
+        assertThat(result.id()).isEqualTo(1);
+        assertThat(result.point()).isEqualTo(50000);
     }
 
     @Test
@@ -92,7 +94,25 @@ public class PointServiceTest {
         UserPoint result = pointService.chargePoint(id, addAmount);
 
         // then
-        assertThat(result.id()).isEqualTo(id);
-        assertThat(result.point()).isEqualTo(amount+addAmount);
+        assertThat(result.id()).isEqualTo(1);
+        assertThat(result.point()).isEqualTo(80000);
+    }
+
+    @Test
+    public void 포인트_사용_불가() {
+        // given
+        long id = 1;
+        long amount = 50000;
+        long usePoint = 70000;
+
+        UserPoint userPoint = new UserPoint(id, amount, 0);
+        given(userPointTable.selectById(anyLong())).willReturn(userPoint);
+        given(userPointTable.insertOrUpdate(anyLong(), anyLong())).willReturn(new UserPoint(userPoint.id(), userPoint.point()-usePoint, 0));
+
+        // when
+        assertThatExceptionOfType(PointNotEnoughException.class)
+                .isThrownBy(() -> {
+                pointService.usingPoint(id, usePoint);
+            }).withMessage("포인트가 부족합니다.");
     }
 }
