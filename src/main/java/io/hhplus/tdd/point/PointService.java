@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -48,7 +47,7 @@ public class PointService {
     }
 
     // 포인트 사용
-    public UserPointResponse usingPoint(long id, long usePoint) throws Exception {
+    public UserPointResponse usePoint(long id, long usePoint) throws Exception {
         UserPointResponse response = new UserPointResponse();
         try {
             lock.lock();    // 동시성 제어

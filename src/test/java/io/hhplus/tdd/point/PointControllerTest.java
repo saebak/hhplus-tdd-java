@@ -17,6 +17,9 @@ public class PointControllerTest {
     @Autowired
     MockMvc mvc;
 
+    /**
+     * 통합 테스트 현재 미구현
+     */
     @Test
     @DisplayName("point 충전")
     void chargeTest() throws Exception {
